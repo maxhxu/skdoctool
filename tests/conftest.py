@@ -4,6 +4,9 @@ import pytest
 from starlette.testclient import TestClient
 
 os.environ.setdefault("SSHAUTH_DB_PATH", "/tmp/sshauth_test.db")
+# TestClient talks over plain http://testserver, so Secure cookies would
+# never round-trip back to the client.
+os.environ.setdefault("SSHAUTH_COOKIE_SECURE", "false")
 
 if os.path.exists(os.environ["SSHAUTH_DB_PATH"]):
     os.remove(os.environ["SSHAUTH_DB_PATH"])

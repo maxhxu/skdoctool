@@ -69,6 +69,13 @@ app.add_middleware(
 # ---------------------------------------------------------------------------
 
 def _client_ip(request: Request) -> str:
+    # Behind the nginx reverse proxy (see nginx/nginx.conf), the real client
+    # IP arrives via X-Forwarded-For rather than the socket peer address.
+    # Only trust this because nginx is the sole entry point in front of the
+    # app (its port isn't published directly) and always sets this header.
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
     return request.client.host if request.client else "unknown"
 
 
@@ -163,6 +170,7 @@ def register(request: Request, payload: RegisterRequest):
     response.set_cookie(
         config.SESSION_COOKIE_NAME, session_id,
         max_age=config.SESSION_TTL_SECONDS, httponly=True, samesite="lax",
+        secure=config.COOKIE_SECURE,
     )
     set_csrf_cookie(response, config.SESSION_CSRF_COOKIE_NAME, session_id, config.SESSION_TTL_SECONDS)
     return response
@@ -182,6 +190,7 @@ def login(request: Request, payload: LoginRequest):
     response.set_cookie(
         config.SESSION_COOKIE_NAME, session_id,
         max_age=config.SESSION_TTL_SECONDS, httponly=True, samesite="lax",
+        secure=config.COOKIE_SECURE,
     )
     set_csrf_cookie(response, config.SESSION_CSRF_COOKIE_NAME, session_id, config.SESSION_TTL_SECONDS)
     return response

@@ -14,6 +14,11 @@ SESSION_TTL_SECONDS = int(os.environ.get("SSHAUTH_SESSION_TTL", str(30 * 24 * 60
 
 SESSION_COOKIE_NAME = "sshauth_session"
 
+# Set the Secure attribute on session/CSRF cookies (requires HTTPS). Defaults
+# on; only disable for local HTTP dev if not testing via localhost (which
+# browsers treat as a secure context even over plain http).
+COOKIE_SECURE = os.environ.get("SSHAUTH_COOKIE_SECURE", "true").lower() not in ("false", "0")
+
 # SPA CSRF cookie: readable by JS (NOT httponly), value = HMAC(SECRET_KEY,
 # <the session cookie's value>). The frontend reads this and echoes it back
 # as a header on mutating requests; see app/csrf.py.

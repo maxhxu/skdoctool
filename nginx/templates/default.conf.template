@@ -1,0 +1,55 @@
+# Reverse proxy + static frontend host in front of the FastAPI app.
+#
+# Terminates TLS, serves the built React SPA, and proxies /api to the app
+# container on the same origin, so cookies stay same-site with no CORS.
+#
+# This is a *.template file: the nginx image's entrypoint runs it through
+# envsubst on container start, substituting ${DOMAIN} from the environment
+# (see docker-compose.yml) before writing it to /etc/nginx/conf.d/default.conf.
+# Nginx's own runtime variables ($host, $scheme, etc.) aren't shell env vars,
+# so envsubst leaves them alone.
+#
+# Certs come from the certbot service (see init-letsencrypt.sh + the
+# `certbot` service in docker-compose.yml), landing at the conventional
+# /etc/letsencrypt/live/$DOMAIN/ path.
+
+server {
+    listen 80;
+    server_name ${DOMAIN};
+
+    # ACME HTTP-01 challenge path — certbot writes here, this must stay
+    # reachable over plain HTTP even after the redirect below exists.
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl;
+    http2 on;
+    server_name ${DOMAIN};
+
+    ssl_certificate     /etc/letsencrypt/live/${DOMAIN}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;
+    ssl_protocols       TLSv1.2 TLSv1.3;
+
+    location /api/ {
+        proxy_pass http://app:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    root /usr/share/nginx/html;
+    index index.html;
+
+    location / {
+        # react-router client-side routing: fall back to index.html
+        try_files $uri /index.html;
+    }
+}

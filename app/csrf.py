@@ -43,4 +43,5 @@ def set_csrf_cookie(response, name: str, bound_cookie_value: str, max_age: int) 
         max_age=max_age,
         httponly=False,
         samesite="lax",
+        secure=config.COOKIE_SECURE,
     )

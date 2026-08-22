@@ -1,0 +1,47 @@
+services:
+  app:
+    build: .
+    environment:
+      SSHAUTH_SECRET: ${SSHAUTH_SECRET:?set SSHAUTH_SECRET to a stable random value}
+      SSHAUTH_DB_PATH: /data/sshauth.db
+      SSHAUTH_SESSION_TTL: ${SSHAUTH_SESSION_TTL:-2592000}
+      SSHAUTH_COOKIE_SECURE: "true"
+    volumes:
+      - db-data:/data
+    expose:
+      - "8000"
+    restart: unless-stopped
+
+  nginx:
+    build:
+      context: .
+      dockerfile: nginx/Dockerfile
+    depends_on:
+      - app
+    environment:
+      DOMAIN: ${DOMAIN:?set DOMAIN to the public hostname this is served from}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - certbot-etc:/etc/letsencrypt:ro
+      - certbot-webroot:/var/www/certbot:ro
+    restart: unless-stopped
+
+  # Renews the cert certbot-etc already holds. Getting the *first* cert is a
+  # one-time bootstrap — run ./init-letsencrypt.sh before starting this stack
+  # for real (see that script for why: nginx won't start with no cert on
+  # disk yet, and there's no cert to request until nginx can serve the
+  # ACME HTTP-01 challenge).
+  certbot:
+    image: certbot/certbot
+    volumes:
+      - certbot-etc:/etc/letsencrypt
+      - certbot-webroot:/var/www/certbot
+    entrypoint: >
+      sh -c "trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 12h & wait $${!}; done"
+
+volumes:
+  db-data:
+  certbot-etc:
+  certbot-webroot:
