@@ -27,7 +27,7 @@ export function RegisterPage() {
   }
 
   return (
-    <form className="stack" style={{ maxWidth: '24rem' }} onSubmit={submit}>
+    <form className="stack" onSubmit={submit}>
       <h1 className="page-title">Create an account</h1>
       <p className="muted">Pick a username and password. That's it — no email required.</p>
       {error && <div className="error-banner">{error}</div>}

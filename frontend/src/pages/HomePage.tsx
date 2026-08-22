@@ -28,22 +28,22 @@ export function HomePage() {
           <FeatureCard
             icon="shield"
             title="No email required"
-            body="Just a username and password. Nothing to verify, nothing to lose access to."
+            body="Start with just a username and password."
           />
           <FeatureCard
             icon="layers"
             title="One format, any shape"
-            body="Create docs, decision trees, or quizzes using simple plain text. Custom layouts render automatically behind the scenes."
+            body="Create docs, decision trees, or quizzes using plain text. Custom layouts render automatically behind the scenes."
           />
           <FeatureCard
             icon="history"
             title="Full history, line-by-line comparison"
-            body="Every save creates an exact snapshot. Easily compare any two past versions side by side to see precise changes over time."
+            body="Every save creates an exact snapshot. Easily compare any two past versions side by side to see changes over time."
           />
           <FeatureCard
             icon="check-circle"
             title="Reviewed before it's live"
-            body="Anyone can suggest an edit, but owners stay in control. Review and accept changes line by line before updating the page."
+            body="Anyone can suggest edits. Review and accept changes line by line before updating the page."
           /> 
         </div>
       </div>

@@ -52,7 +52,7 @@ token to. Rate limiting is an in-memory sliding-window limiter (`app/ratelimit.p
 process-local by design (see README "Rate limiting" for exact per-endpoint limits and
 the note on swapping in Redis if this ever runs multi-process).
 
-### Content model ("skdown")
+### Content model
 
 Every file's content is one format regardless of its `kind` (`doc` | `decision-tree` |
 `quiz`), documented in `CONTENT_FORMAT.md`: markdown frontmatter for `kind`, plus
