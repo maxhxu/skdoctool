@@ -1,0 +1,99 @@
+# Gates every push to main and every PR. Deployment is still manual (see
+# README "Deploying") — this only answers "would that deploy have worked?".
+#
+# The three jobs mirror the three things a deploy actually does: run the
+# Python API, build the frontend into the nginx image, and have nginx accept
+# its config. A green run means all three still hold.
+
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+# A newer push to the same branch makes an in-flight run pointless. Private
+# repo, so Actions minutes are billed — don't burn them on stale commits.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  backend:
+    name: Backend tests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # setup-uv has no moving major tag past v7, so this is pinned exactly.
+      - uses: astral-sh/setup-uv@v10.0.1
+        with:
+          enable-cache: true
+
+      # --frozen: fail if uv.lock is out of date rather than silently
+      # resolving something different from what a deploy would install.
+      - name: Install dependencies
+        run: uv sync --frozen
+
+      - name: pytest
+        run: uv run --frozen pytest tests/ -v
+
+  frontend:
+    name: Frontend lint, tests, build
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+
+      # 20 matches node:20-alpine in nginx/Dockerfile — the version that
+      # actually builds the production bundle. Testing on anything newer
+      # would let a Node 20 build failure through.
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Unit tests
+        run: npx vitest run
+
+      # tsc -b && vite build: typecheck *and* production bundle, the same
+      # command nginx/Dockerfile runs.
+      - name: Typecheck and build
+        run: npm run build
+
+  nginx-config:
+    name: nginx config
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      # A syntax error here doesn't fail a build — it takes the whole site
+      # down on the next `docker compose up`, since nginx won't start. Cheap
+      # to catch, expensive to miss.
+      #
+      # Two things make `nginx -t` pass outside production: a cert at the
+      # path the config expects (nginx checks the file exists), and a
+      # resolvable `app` host (it resolves upstreams at config-test time).
+      - name: Validate rendered config
+        run: |
+          mkdir -p /tmp/certs/live/ci.example
+          openssl req -x509 -newkey rsa:2048 -nodes -days 1 \
+            -keyout /tmp/certs/live/ci.example/privkey.pem \
+            -out /tmp/certs/live/ci.example/fullchain.pem \
+            -subj "/CN=ci.example" 2>/dev/null
+          docker run --rm \
+            -e DOMAIN=ci.example \
+            --add-host app:127.0.0.1 \
+            -v "$PWD/nginx/templates:/etc/nginx/templates:ro" \
+            -v "/tmp/certs:/etc/letsencrypt:ro" \
+            nginx:1.27-alpine nginx -t
