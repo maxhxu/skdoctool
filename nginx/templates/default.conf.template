@@ -13,6 +13,28 @@
 # `certbot` service in docker-compose.yml), landing at the conventional
 # /etc/letsencrypt/live/$DOMAIN/ path.
 
+# Clickjacking policy, by route. Only a *file* page may be framed — that's the
+# embed feature (README "Embedding a file on another site"): third-party sites
+# put <iframe src="https://${DOMAIN}/files/3"> on their own pages. Every other
+# route — the file list, /files/new, login, profiles — has no reason to be
+# framed and is denied below.
+#
+# The exception inside the exception: `?embed=0` tells the SPA to render the
+# *full* app inside the frame, edit controls and all. That's an escape hatch,
+# not an embed, so it gets the same denial as everything else. Empty value =
+# nginx omits the header entirely, i.e. framing allowed.
+map $arg_embed $file_page_xfo {
+    default  "";
+    "0"      "DENY";
+    "false"  "DENY";
+}
+
+map $arg_embed $file_page_csp {
+    default  "";
+    "0"      "frame-ancestors 'none'";
+    "false"  "frame-ancestors 'none'";
+}
+
 server {
     listen 80;
     server_name ${DOMAIN};
@@ -48,7 +70,21 @@ server {
     root /usr/share/nginx/html;
     index index.html;
 
+    # The one framable route: a single file's page, which is what an embed
+    # points at. `try_files /index.html =404` serves the SPA shell *without* an
+    # internal redirect — falling through to `location /` instead would hand the
+    # response that block's deny headers and break every embed.
+    location ~ ^/files/[0-9]+/?$ {
+        add_header X-Frame-Options $file_page_xfo always;
+        add_header Content-Security-Policy $file_page_csp always;
+        try_files /index.html =404;
+    }
+
     location / {
+        # Not framable: /files, /files/new, /login, /u/*, and the static assets.
+        add_header X-Frame-Options DENY always;
+        add_header Content-Security-Policy "frame-ancestors 'none'" always;
+
         # react-router client-side routing: fall back to index.html
         try_files $uri /index.html;
     }

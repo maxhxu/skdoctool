@@ -8,6 +8,8 @@ import { MyFilesPage, ExplorePage } from './pages/FileListPages'
 import { NewFilePage } from './pages/NewFilePage'
 import { FileViewPage } from './pages/FileViewPage'
 import { ProfilePage } from './pages/ProfilePage'
+import { EmbedPage } from './pages/EmbedPage'
+import { isEmbedMode } from './lib/embed'
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
@@ -16,7 +18,26 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
   return <>{children}</>
 }
 
+/**
+ * Framed on someone else's site, a file renders as a bare embed instead of the
+ * full workspace — see lib/embed.ts. Its own route tree, with no AuthProvider:
+ * an embed is view-only whether or not the frame happens to carry a session,
+ * so there's nothing for it to ask /api/me about.
+ */
+function EmbedApp() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/files/:id" element={<EmbedPage />} />
+        <Route path="*" element={<p className="embed-message">Only a file can be embedded.</p>} />
+      </Routes>
+    </BrowserRouter>
+  )
+}
+
 export default function App() {
+  if (isEmbedMode()) return <EmbedApp />
+
   return (
     <AuthProvider>
       <BrowserRouter>

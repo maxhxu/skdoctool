@@ -38,6 +38,11 @@ process (`run.py`) serves everything, backed by a single SQLite DB:
   crypto dependency).
 - `frontend/` — a React SPA (Vite, TypeScript, react-router). Talks to the API via
   `frontend/src/lib/api.ts`, which reads the CSRF cookie and echoes it as a header.
+  When the SPA notices it's being framed (`frontend/src/lib/embed.ts`) it swaps in a
+  separate, chrome-free route tree rendering `EmbedPage` — so the shared `/files/:id`
+  URL doubles as the embed URL. Nothing server-side backs this: `SameSite=Lax` makes a
+  cross-site frame anonymous, so the ordinary public/private check already limits
+  embeds to public files (see README "Embedding a file on another site").
 
 Identity is a username + password, nothing else — no email, no account-recovery flow.
 `/api/register` validates the username (3-20 chars: letters/digits/underscore) and
@@ -81,5 +86,10 @@ there before adding a hardcoded value that should be configurable.
 
 The frontend is meant to be built and served from the same origin as the FastAPI app (or a
 proxy in front of both) so cookies are same-site with no CORS involved — the Vite dev
-proxy is dev-only. See README "Design notes" for the full list of deliberate scope
-boundaries (no account recovery, etc.) before treating any of those as bugs to fix.
+proxy is dev-only. `docker-compose.yml` + `nginx/` + `init-letsencrypt.sh` implement this:
+app + nginx (TLS, static frontend, `/api` proxy) + a certbot renewal sidecar. The nginx
+config is also where the clickjacking policy lives: framing is denied on every route
+except `/files/<id>`, the one an embed points at. See README
+"Deploying" for the run commands. `cloudflare-ufw.sh` is an optional VPS-hardening step,
+unrelated to the app itself. See README "Design notes" for the full list of deliberate
+scope boundaries (no account recovery, etc.) before treating any of those as bugs to fix.

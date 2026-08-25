@@ -461,3 +461,48 @@ a.feature-card.feature-card-accent { border-color: var(--accent); }
 
 code { font-family: var(--font-mono); background: var(--accent-soft); padding: 0.1em 0.35em; border-radius: 4px; font-size: 0.88em; }
 pre code { background: none; padding: 0; }
+
+/* ---- embed mode ---------------------------------------------------------
+   The file as it renders inside someone else's <iframe>: no app chrome, and
+   padded for the badge so a long doc's last line never sits under it. */
+
+.embed-root {
+  min-height: 100%;
+  background: var(--surface);
+  padding: 1.25rem 1.5rem 3.25rem;
+}
+
+.embed-content { max-width: 48rem; }
+
+.embed-title {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  margin: 0 0 0.85rem;
+}
+.embed-title a { color: var(--ink); text-decoration: none; }
+.embed-title a:hover { text-decoration: underline; }
+
+.embed-message { color: var(--ink-soft); padding: 1.25rem 1.5rem; }
+.embed-root > .embed-message { padding: 0; }
+
+.embed-badge {
+  position: fixed;
+  right: 0.75rem;
+  bottom: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.2rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-display);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  text-decoration: none;
+  opacity: 0.75;
+}
+.embed-badge:hover { opacity: 1; border-color: var(--accent); }
