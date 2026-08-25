@@ -1,9 +1,9 @@
 # Gates every push to main and every PR. Deployment is still manual (see
 # README "Deploying") — this only answers "would that deploy have worked?".
 #
-# The three jobs mirror the three things a deploy actually does: run the
-# Python API, build the frontend into the nginx image, and have nginx accept
-# its config. A green run means all three still hold.
+# The jobs mirror what a deploy actually does: run the Python API, build the
+# frontend the way the nginx image builds it, and have nginx accept its
+# config. A green run means all of that still holds.
 
 name: CI
 
@@ -39,8 +39,16 @@ jobs:
       - name: pytest
         run: uv run --frozen pytest tests/ -v
 
-  frontend:
-    name: Frontend lint, tests, build
+  # Two frontend jobs on two Node versions, deliberately — do not merge them.
+  # jsdom@30 (the vitest environment) declares engines ^22.22.2 || ^24.15.0,
+  # and its undici@8 dep calls worker_threads.markAsUncloneable, which simply
+  # doesn't exist on Node 20. But production builds the bundle with
+  # node:20-alpine, and vite@8 supports ^20.19.0 fine. jsdom is test-only and
+  # never ships, so the two can differ: build on what production uses, test on
+  # what the test tooling needs. npm only warns on engine mismatches, so
+  # getting this wrong fails at runtime, not at install.
+  frontend-build:
+    name: Frontend lint and build (Node 20, production parity)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -49,8 +57,7 @@ jobs:
       - uses: actions/checkout@v7
 
       # 20 matches node:20-alpine in nginx/Dockerfile — the version that
-      # actually builds the production bundle. Testing on anything newer
-      # would let a Node 20 build failure through.
+      # actually builds the production bundle.
       - uses: actions/setup-node@v7
         with:
           node-version: '20'
@@ -63,13 +70,31 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      - name: Unit tests
-        run: npx vitest run
-
       # tsc -b && vite build: typecheck *and* production bundle, the same
       # command nginx/Dockerfile runs.
       - name: Typecheck and build
         run: npm run build
+
+  frontend-tests:
+    name: Frontend tests (Node 22, jsdom requirement)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Unit tests
+        run: npx vitest run
 
   nginx-config:
     name: nginx config
