@@ -12,8 +12,8 @@ kind: decision-tree
 :::node id="start" title="Welcome" start="true"
 Describe the first moment.
 
-- [First choice](#a)
-- [Second choice](#b)
+[First choice](#a)
+[Second choice](#b)
 :::
 
 :::node id="a" title="Branch A"

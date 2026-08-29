@@ -66,7 +66,7 @@ export function FileViewPage() {
         </div>
       </div>
 
-      <div className="row" style={{ borderBottom: '1px solid var(--border)', paddingBottom: '0.5rem' }}>
+      <div className="row" style={{ borderBottom: '1px solid var(--border)', paddingBottom: '1rem', marginBottom: '1rem' }}>
         {tabs.map((t) => (
           <button
             key={t.key}
