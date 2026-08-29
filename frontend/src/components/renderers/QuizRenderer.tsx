@@ -1,5 +1,11 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type ReactNode } from 'react'
+import ReactMarkdown from 'react-markdown'
+import remarkGfm from 'remark-gfm'
 import { parseDocument, parseQuiz } from '../../lib/skdown'
+
+/** An option is a single task-list line, so its markdown is inline: drop the
+ * paragraph wrapper ReactMarkdown would otherwise put around it. */
+const INLINE_ONLY = { p: ({ children }: { children?: ReactNode }) => <>{children}</> }
 
 export function QuizRenderer({ content }: { content: string }) {
   const questions = useMemo(() => parseQuiz(parseDocument(content)), [content])
@@ -44,7 +50,11 @@ export function QuizRenderer({ content }: { content: string }) {
                   disabled={submitted}
                   onChange={() => setSelected((s) => ({ ...s, [q.id]: i }))}
                 />
-                {opt.text}
+                <span className="md-body">
+                  <ReactMarkdown remarkPlugins={[remarkGfm]} components={INLINE_ONLY}>
+                    {opt.text}
+                  </ReactMarkdown>
+                </span>
               </label>
             )
           })}

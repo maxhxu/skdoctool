@@ -50,7 +50,9 @@ Stairs down. You made it out.
   point.
 - **quiz**: each `:::question` is one question. Its body is a normal GFM
   task list (`- [ ]` / `- [x]`) — the checked item is the correct answer.
-  No separate "answer key" field to keep in sync with the options.
+  No separate "answer key" field to keep in sync with the options. An
+  option's text is inline markdown like everything else, so `` `code` ``,
+  emphasis, and links render inside the answer.
 
 Both non-default renderers are just *views* over the same node/question
 list — the frontend's directive-block parser is a small, generic tree
