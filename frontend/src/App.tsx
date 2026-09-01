@@ -1,3 +1,4 @@
+import { useEffect } from 'react'
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { Layout } from './components/Layout'
@@ -8,8 +9,10 @@ import { MyFilesPage, ExplorePage } from './pages/FileListPages'
 import { NewFilePage } from './pages/NewFilePage'
 import { FileViewPage } from './pages/FileViewPage'
 import { ProfilePage } from './pages/ProfilePage'
+import { SettingsPage } from './pages/SettingsPage'
 import { EmbedPage } from './pages/EmbedPage'
 import { isEmbedMode } from './lib/embed'
+import { listenForHostTheme } from './lib/theme'
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const { user, loading } = useAuth()
@@ -23,8 +26,13 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
  * full workspace — see lib/embed.ts. Its own route tree, with no AuthProvider:
  * an embed is view-only whether or not the frame happens to carry a session,
  * so there's nothing for it to ask /api/me about.
+ *
+ * It does listen for the host's theme, though — a framed file can't read the
+ * reader's stored preference, so the host gets a say (see lib/theme.ts).
  */
 function EmbedApp() {
+  useEffect(listenForHostTheme, [])
+
   return (
     <BrowserRouter>
       <Routes>
@@ -49,6 +57,7 @@ export default function App() {
             <Route path="/explore" element={<ExplorePage />} />
             <Route path="/u/:username" element={<ProfilePage />} />
             <Route path="/files/:id" element={<FileViewPage />} />
+            <Route path="/settings" element={<SettingsPage />} />
             <Route
               path="/files"
               element={

@@ -5,6 +5,29 @@
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>skdoctool</title>
+    <script>
+      // Stamp the theme before first paint, so a load never flashes the light
+      // palette on its way to the dark one. src/lib/theme.ts is the real
+      // implementation and re-runs this once React boots; this copy exists
+      // only because a module import is too late to beat the first paint.
+      // Keep the two in step — same key, same precedence.
+      ;(function () {
+        var pref = new URLSearchParams(location.search).get('theme')
+        if (pref !== 'system' && pref !== 'light' && pref !== 'dark') {
+          // Throws, rather than returning null, in a frame with storage
+          // blocked — an embed then falls through to prefers-color-scheme.
+          try {
+            pref = localStorage.getItem('skdoctool:theme')
+          } catch (e) {
+            pref = null
+          }
+        }
+        var dark =
+          pref === 'dark' ||
+          (pref !== 'light' && window.matchMedia('(prefers-color-scheme: dark)').matches)
+        document.documentElement.dataset.theme = dark ? 'dark' : 'light'
+      })()
+    </script>
   </head>
   <body>
     <div id="root"></div>

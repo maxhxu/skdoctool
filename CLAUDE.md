@@ -43,6 +43,13 @@ process (`run.py`) serves everything, backed by a single SQLite DB:
   URL doubles as the embed URL. Nothing server-side backs this: `SameSite=Lax` makes a
   cross-site frame anonymous, so the ordinary public/private check already limits
   embeds to public files (see README "Embedding a file on another site").
+  The light/dark palette (`frontend/src/lib/theme.ts`, toggled on `/settings`) is
+  browser-local for the same reason it has to be: a framed file can't read this
+  origin's `localStorage`, so an embed resolves its theme from `?theme=` > a
+  `skdoctool:theme` postMessage from the host > the stored toggle > `prefers-color-
+  scheme`. Themes are CSS custom properties keyed off `data-theme` on `<html>`, which
+  `frontend/index.html` stamps inline pre-paint — add new colours as tokens in both
+  blocks at the top of `index.css`, not as literals. See README "Dark mode".
 
 Identity is a username + password, nothing else — no email, no account-recovery flow.
 `/api/register` validates the username (3-20 chars: letters/digits/underscore) and

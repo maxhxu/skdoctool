@@ -1,3 +1,8 @@
+/* The palette is entirely custom properties, so a theme is one attribute on
+   <html>: `data-theme="light" | "dark"`. index.html stamps it before first
+   paint and src/lib/theme.ts keeps it current — see there for how an embed
+   picks a theme without access to our localStorage. */
+
 :root {
   --ink: #1c1e1b;
   --ink-soft: #565b52;
@@ -8,19 +13,49 @@
   --accent: #2f6f4e;      /* moss green — versioning/branches, not terracotta/neon */
   --accent-soft: #e8f2ec;
   --accent-ink: #1e4a34;
+  --on-accent: #ffffff;   /* text on a filled --accent surface */
   --danger: #a3372c;
   --danger-soft: #fbeae7;
   --add-bg: #e8f5e9;
   --add-text: #1b5e20;
   --remove-bg: #fdecea;
   --remove-text: #8a271f;
+  --chip-bg: #eeeeee;
   --focus: #2f6f4e;
+  --shadow: 0 8px 24px rgba(28, 30, 27, 0.14);
 
   --font-body: ui-sans-serif, system-ui, -apple-system, "Segoe UI", "Inter", sans-serif;
   --font-display: var(--font-body);
   --font-mono: ui-monospace, "JetBrains Mono", "SFMono-Regular", Menlo, Consolas, monospace;
 
   color-scheme: light;
+}
+
+/* Dark: same roles, same ordering (page-bg behind paper behind surface), and a
+   lifted moss accent — the light one is too dark to carry white text here, so
+   --on-accent inverts with it. */
+:root[data-theme="dark"] {
+  --ink: #e7e9e2;
+  --ink-soft: #9ba296;
+  --page-bg: #0e100d;
+  --paper: #151814;
+  --surface: #1c201b;
+  --border: #2e332c;
+  --accent: #6ec294;
+  --accent-soft: #1d2a23;
+  --accent-ink: #92d6b0;
+  --on-accent: #0e120f;
+  --danger: #ef8a7e;
+  --danger-soft: #351f1c;
+  --add-bg: #16301f;
+  --add-text: #9bdcae;
+  --remove-bg: #38201e;
+  --remove-text: #f0a79d;
+  --chip-bg: #2a2f28;
+  --focus: #6ec294;
+  --shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+
+  color-scheme: dark;
 }
 
 * { box-sizing: border-box; }
@@ -70,7 +105,7 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 button.primary {
   background: var(--accent);
   border-color: var(--accent);
-  color: white;
+  color: var(--on-accent);
   font-weight: 700;
 }
 button.primary:hover { background: var(--accent-ink); }
@@ -159,7 +194,7 @@ label {
   height: 1.5rem;
   border-radius: 50%;
   background: var(--accent);
-  color: white;
+  color: var(--on-accent);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -179,7 +214,7 @@ label {
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 0.35rem;
-  box-shadow: 0 8px 24px rgba(28, 30, 27, 0.14);
+  box-shadow: var(--shadow);
   display: flex;
   flex-direction: column;
   gap: 0.1rem;
@@ -285,7 +320,7 @@ label {
   background: var(--accent-soft);
   color: var(--accent-ink);
 }
-.pill.private { background: #eee; color: var(--ink-soft); }
+.pill.private { background: var(--chip-bg); color: var(--ink-soft); }
 
 .file-list { display: flex; flex-direction: column; gap: 0.45rem; }
 .file-row {
@@ -461,6 +496,75 @@ a.feature-card.feature-card-accent { border-color: var(--accent); }
 
 code { font-family: var(--font-mono); background: var(--accent-soft); padding: 0.1em 0.35em; border-radius: 4px; font-size: 0.88em; }
 pre code { background: none; padding: 0; }
+
+/* ---- settings -----------------------------------------------------------
+   Rows of one preference each: name and explanation on the left, the control
+   itself hard right, so a second setting drops in without a new layout. */
+
+.settings-page { max-width: 38rem; }
+
+.setting-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+.setting-row + .setting-row {
+  margin-top: 0.85rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--border);
+}
+.setting-label { font-weight: 700; font-size: 0.92rem; }
+.setting-help { color: var(--ink-soft); font-size: 0.83rem; margin: 0.15rem 0 0; line-height: 1.5; }
+.setting-help + .setting-help { margin-top: 0.35rem; }
+
+.setting-reset {
+  border: none;
+  background: none;
+  padding: 0;
+  font-size: inherit;
+  font-weight: 700;
+  color: var(--accent-ink);
+  text-decoration: underline;
+}
+.setting-reset:hover { border-color: transparent; color: var(--accent); }
+
+/* A checkbox with the box swapped for a track and a thumb. The input keeps
+   every keyboard and screen-reader behaviour a checkbox already has. */
+.switch { flex-shrink: 0; display: inline-flex; }
+.switch input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  margin: 0;
+}
+.switch-track {
+  display: block;
+  width: 2.6rem;
+  height: 1.5rem;
+  padding: 0.15rem;
+  border-radius: 999px;
+  background: var(--chip-bg);
+  border: 1px solid var(--border);
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.switch-thumb {
+  display: block;
+  width: 1.1rem;
+  height: 1.1rem;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+  transition: transform 0.15s ease;
+}
+.switch input:checked + .switch-track {
+  background: var(--accent);
+  border-color: var(--accent);
+}
+.switch input:checked + .switch-track .switch-thumb { transform: translateX(1.1rem); }
+.switch input:focus-visible + .switch-track { outline: 2px solid var(--focus); outline-offset: 2px; }
 
 /* ---- embed mode ---------------------------------------------------------
    The file as it renders inside someone else's <iframe>: no app chrome, and

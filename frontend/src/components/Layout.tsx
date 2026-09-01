@@ -51,6 +51,22 @@ export function Layout() {
                 </NavLink>
               </div>
             )}
+
+            {!loading && (
+              <div className="nav-section">
+                <div className="nav-section-title">Account</div>
+                {/* No profile to link to when logged out; settings are
+                    browser-local, so they stay either way. */}
+                {user && (
+                  <NavLink to={`/u/${user.username}`} className={navClass}>
+                    Profile
+                  </NavLink>
+                )}
+                <NavLink to="/settings" className={navClass}>
+                  Settings
+                </NavLink>
+              </div>
+            )}
           </nav>
         </aside>
         <main className="main">

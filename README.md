@@ -85,6 +85,40 @@ valid token requires reading the paired httponly cookie, which same-origin polic
 blocks. `/api/register` and `/api/login` are exempt — there's no session cookie yet
 to bind a token to.
 
+## Dark mode
+
+`/settings` has one preference so far: a dark-mode toggle. It's browser-local —
+no API call, no column on the account — so it works logged out, and the whole
+palette is CSS custom properties on `:root`, which makes a theme one attribute
+on `<html>`: `data-theme="light" | "dark"`. `frontend/index.html` stamps that
+attribute in an inline script before first paint, so a reload never flashes the
+light palette on its way to the dark one.
+
+Untouched, the toggle follows `prefers-color-scheme` — the OS setting — and keeps
+following it as that changes. Flipping it pins a choice in `localStorage`
+(`skdoctool:theme`), which syncs across tabs and can be handed back with "Match
+my system instead". `frontend/src/lib/theme.ts` is the whole implementation.
+
+**Embedded files are themed too**, which needs more than `localStorage`: browsers
+partition storage by top-level site (Safari blocks it outright in a third-party
+frame), so a frame on someone else's page can't read the preference set here.
+So, highest priority first, an embed picks its palette from:
+
+1. **`?theme=dark`** (or `light`, or `system`) on the iframe URL — a host pinning
+   a palette to match its own page.
+2. **A `skdoctool:theme` message** from the host, for a host whose own dark-mode
+   switch should move the frame with it:
+
+   ```js
+   frame.contentWindow.postMessage({ type: 'skdoctool:theme', theme: 'dark' }, '*')
+   ```
+
+   Neither of these is stored — they're the *embedding page's* choice, and
+   shouldn't overwrite a reader's own toggle on `/settings`.
+3. **`prefers-color-scheme`.** This one does reach into a third-party frame, so
+   with no cooperation from the host at all an embed still follows the reader's
+   own system dark mode. It's why the default is "system" rather than "light".
+
 ## Embedding a file on another site
 
 Any **public** file can be dropped onto another site as an iframe, using the same
@@ -124,6 +158,9 @@ controls. Serving the SPA behind something other than the bundled nginx means
 reproducing that rule; without it the app is framable everywhere, as it was before
 embeds existed.
 
+**Theming.** An embed follows the reader's own system dark mode, and a host can
+pin or live-update the palette instead — see "Dark mode" above.
+
 **Sizing.** An iframe can't size itself, so a fixed `height` scrolls internally.
 Hosts that want auto-resize can listen for the height the embed posts on every
 content resize:
@@ -155,11 +192,12 @@ frontend/
   src/lib/skdown.ts               # frontmatter + directive-block parser (the extension point)
   src/lib/api.ts                  # typed fetch client, handles CSRF header
   src/lib/embed.ts                # embed-mode detection + host height messaging
+  src/lib/theme.ts                # light/dark palette resolution (incl. inside an embed)
   src/components/rendererRegistry.tsx  # kind -> renderer component map
   src/components/renderers/       # DocRenderer, DecisionTreeRenderer, QuizRenderer
   src/components/{Layout,MarkdownEditor,DiffView}.tsx
   src/context/AuthContext.tsx
-  src/pages/                      # Home, Login, Register, Profile, file list/view
+  src/pages/                      # Home, Login, Register, Profile, Settings, file list/view
   src/pages/EmbedPage.tsx         # the content-only view a framed file renders as
 CONTENT_FORMAT.md  # the markdown-derivative format renderers read
 nginx/, docker-compose.yml, init-letsencrypt.sh, cloudflare-ufw.sh   # production deploy
@@ -193,6 +231,10 @@ nginx/, docker-compose.yml, init-letsencrypt.sh, cloudflare-ufw.sh   # productio
   changes for it: `SameSite=Lax` makes a cross-site frame anonymous, so the
   existing public/private check is the whole story. No embed tokens, no per-site
   allowlist, no new endpoint.
+- **Theme preference is browser-local, not account state.** Which palette you read
+  in isn't something the server needs to know, and tying it to an account would
+  mean an embed couldn't be themed at all — a framed file is an anonymous request
+  (see "Dark mode").
 - **CSRF tokens are HMAC-derived from the cookie they protect**, not randomly
   generated and stored server-side — no extra table, and a token is automatically
   scoped to exactly the session it came from.
