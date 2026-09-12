@@ -41,18 +41,3 @@ export function MyFilesPage() {
     </div>
   )
 }
-
-export function ExplorePage() {
-  const [files, setFiles] = useState<FileMeta[] | null>(null)
-
-  useEffect(() => {
-    filesApi.public().then((r) => setFiles(r.files))
-  }, [])
-
-  return (
-    <div className="stack">
-      <h1 className="page-title">Explore public files</h1>
-      {files ? <FileList files={files} /> : <p className="muted">Loading…</p>}
-    </div>
-  )
-}

@@ -157,7 +157,6 @@ export const profileApi = {
 
 export const filesApi = {
   mine: () => api.get<{ files: FileMeta[] }>('/api/files'),
-  public: () => api.get<{ files: FileMeta[] }>('/api/files/public'),
   create: (input: { title: string; kind: string; visibility: string; content: string }) =>
     api.post<FileMeta>('/api/files', input),
   get: (id: number) => api.get<FileDetail>(`/api/files/${id}`),

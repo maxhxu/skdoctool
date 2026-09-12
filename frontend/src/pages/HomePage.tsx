@@ -20,7 +20,7 @@ export function HomePage() {
           </p>
           <div className="row">
             <Link to="/register"><button className="primary">Create an account</button></Link>
-            <Link to="/explore"><button>Explore public files</button></Link>
+            <Link to="/login"><button>Sign in</button></Link>
           </div>
         </div>
 
@@ -62,12 +62,6 @@ export function HomePage() {
           accent
         />
         <FeatureLinkCard to="/files" icon="folder" title="My files" body="Everything you own or can edit." />
-        <FeatureLinkCard
-          to="/explore"
-          icon="compass"
-          title="Explore public files"
-          body="See what other people have published."
-        />
         <FeatureLinkCard
           to={`/u/${user.username}`}
           icon="user"

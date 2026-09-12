@@ -51,9 +51,6 @@ def test_public_file_visible_to_everyone():
     body = resp.json()
     assert body["can_edit"] is False  # viewer, not editor
 
-    listed = owner.get("/api/files/public").json()["files"]
-    assert any(x["id"] == f["id"] for x in listed)
-
 
 def test_revision_editing_and_optimistic_concurrency():
     owner, _ = new_logged_in_client("ed1")

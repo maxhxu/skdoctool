@@ -5,7 +5,7 @@ import { Layout } from './components/Layout'
 import { HomePage } from './pages/HomePage'
 import { LoginPage } from './pages/LoginPage'
 import { RegisterPage } from './pages/RegisterPage'
-import { MyFilesPage, ExplorePage } from './pages/FileListPages'
+import { MyFilesPage } from './pages/FileListPages'
 import { NewFilePage } from './pages/NewFilePage'
 import { FileViewPage } from './pages/FileViewPage'
 import { ProfilePage } from './pages/ProfilePage'
@@ -54,7 +54,6 @@ export default function App() {
             <Route path="/" element={<HomePage />} />
             <Route path="/login" element={<LoginPage />} />
             <Route path="/register" element={<RegisterPage />} />
-            <Route path="/explore" element={<ExplorePage />} />
             <Route path="/u/:username" element={<ProfilePage />} />
             <Route path="/files/:id" element={<FileViewPage />} />
             <Route path="/settings" element={<SettingsPage />} />

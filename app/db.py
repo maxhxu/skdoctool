@@ -281,18 +281,6 @@ def list_files_for_user(user_id: int) -> list[sqlite3.Row]:
     ).fetchall()
 
 
-def list_public_files() -> list[sqlite3.Row]:
-    conn = get_conn()
-    return conn.execute(
-        """
-        SELECT files.*, users.username AS owner_username
-        FROM files JOIN users ON users.id = files.owner_id
-        WHERE visibility = 'public'
-        ORDER BY files.updated_at DESC
-        """
-    ).fetchall()
-
-
 def list_files_owned_by_username(username: str) -> list[sqlite3.Row]:
     """Public files owned by a given user, for their profile page."""
     conn = get_conn()
