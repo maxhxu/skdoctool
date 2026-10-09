@@ -264,11 +264,6 @@ def list_my_files(sshauth_session: str | None = Cookie(default=None)):
     return {"files": [_file_out(f) for f in db.list_files_for_user(user["id"])]}
 
 
-@app.get("/api/files/public")
-def list_public_files():
-    return {"files": [_file_out(f) for f in db.list_public_files()]}
-
-
 @app.post("/api/files")
 def create_file(
     payload: FileCreate,

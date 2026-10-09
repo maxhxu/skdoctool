@@ -35,9 +35,6 @@ export function Layout() {
               <NavLink to="/" end className={navClass}>
                 Home
               </NavLink>
-              <NavLink to="/explore" className={navClass}>
-                Explore public files
-              </NavLink>
             </div>
 
             {!loading && user && (
